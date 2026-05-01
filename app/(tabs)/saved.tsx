@@ -31,16 +31,14 @@ function RecipeCard({ recipe, onPress, onDelete }: { recipe: SavedRecipe; onPres
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardEmoji}>{recipe.emoji}</Text>
+        <Text style={styles.cardName} numberOfLines={2}>{recipe.name}</Text>
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Text style={styles.deleteBtnText}>✕</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.cardName} numberOfLines={2}>{recipe.name}</Text>
       <View style={styles.cardBadges}>
         <View style={styles.badge}><Text style={styles.badgeText}>⏱ {recipe.time}</Text></View>
         <View style={styles.badge}><Text style={styles.badgeText}>👨‍🍳 {recipe.complexity}</Text></View>
-        <View style={styles.badge}><Text style={styles.badgeText}>👥 {recipe.persons} pers.</Text></View>
       </View>
       {recipe.allergens.length > 0 && (
         <View style={styles.allergens}>
@@ -74,7 +72,13 @@ export default function SavedScreen() {
   };
 
   const handleCardPress = (recipe: SavedRecipe) => {
-    setSelectedPersons(String(recipe.persons) as PersonsOption);
+    const validOptions: PersonsOption[] = ['1', '2', '4', '6+'];
+    const closest = validOptions.reduce((prev, curr) => {
+      const prevN = parsePersons(prev);
+      const currN = parsePersons(curr);
+      return Math.abs(currN - recipe.persons) < Math.abs(prevN - recipe.persons) ? curr : prev;
+    });
+    setSelectedPersons(closest);
     setSelected(recipe);
   };
 
@@ -169,11 +173,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white, borderRadius: 20, padding: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  cardEmoji: { fontSize: 36 },
-  deleteBtn: { padding: 4 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
+  deleteBtn: { padding: 4, paddingTop: 2 },
   deleteBtnText: { fontSize: 14, color: Colors.textLight, fontWeight: '600' },
-  cardName: { fontSize: 18, fontWeight: '700', color: Colors.text, lineHeight: 24, marginBottom: 12 },
+  cardName: { flex: 1, fontSize: 18, fontWeight: '700', color: Colors.text, lineHeight: 24 },
   cardBadges: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 10 },
   badge: { backgroundColor: Colors.cream, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, borderWidth: 1, borderColor: Colors.border },
   badgeText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '500' },

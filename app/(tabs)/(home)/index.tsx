@@ -14,6 +14,7 @@ import {
 import { router } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { getUstensils, saveUstensils, ALL_USTENSILS } from '@/utils/storage';
+import { resetQuota } from '@/utils/quota';
 
 const DIETS = ['Omnivore', 'Végétarien', 'Vegan', 'Pesco-végétarien', 'Sans porc', 'Sans lactose', 'Sans gluten'];
 const ALLERGIES = ['Aucune', 'Gluten', 'Lactose', 'Œufs', 'Fruits à coque', 'Arachides', 'Crustacés', 'Poisson', 'Soja', 'Sésame'];
@@ -140,6 +141,9 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.spacer} />
+          <TouchableOpacity onPress={() => resetQuota()} activeOpacity={0.4} style={styles.devReset}>
+            <Text style={styles.devResetText}>⚙ reset quota [dev]</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         <View style={styles.footer}>
@@ -191,7 +195,7 @@ const styles = StyleSheet.create({
   },
   filterGroup: { marginBottom: 24 },
   filterLabel: { fontSize: 12, fontWeight: '700', color: Colors.textSecondary, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10 },
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   chip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 100, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.white },
   chipSelected: { backgroundColor: Colors.orangeLight, borderColor: Colors.orange },
   chipText: { fontSize: 14, color: Colors.textSecondary, fontWeight: '500' },
@@ -205,6 +209,8 @@ const styles = StyleSheet.create({
   ustensileButtonText: { fontSize: 15, color: Colors.text, fontWeight: '500' },
   ustensileChevron: { fontSize: 22, color: Colors.textSecondary, lineHeight: 26 },
   spacer: { height: 16 },
+  devReset: { alignItems: 'center', paddingVertical: 8 },
+  devResetText: { fontSize: 11, color: Colors.border, fontWeight: '400' },
   footer: { paddingHorizontal: 24, paddingBottom: Platform.OS === 'ios' ? 32 : 24, paddingTop: 16, backgroundColor: Colors.cream },
   button: {
     backgroundColor: Colors.orange, borderRadius: 16, paddingVertical: 18, alignItems: 'center',

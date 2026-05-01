@@ -44,7 +44,7 @@ export async function generateRecipe(params: {
     ? `\nINGRÉDIENTS DE DÉPART (obligatoires) : L'utilisateur a sélectionné ces ingrédients : ${params.mandatoryIngredients.join(', ')}. Ils doivent obligatoirement apparaître dans la recette. Tu dois cependant ajouter tous les autres ingrédients complémentaires nécessaires pour que la recette soit complète, cohérente et appétissante. Ces ingrédients sont le point de départ, pas une limite.`
     : '';
 
-  const prompt = `Tu es un chef cuisinier passionné, créatif et pédagogue. Génère une recette unique, réaliste et appétissante basée sur ces paramètres :
+const prompt = `Tu es un chef cuisinier passionné, créatif et pédagogue. Génère une recette unique, réaliste et appétissante basée sur ces paramètres :
 - Ingrédient principal : ${params.ingredient}
 - Complexité : ${params.complexity}
 - Temps disponible : ${params.time}
@@ -55,13 +55,17 @@ export async function generateRecipe(params: {
 
 Règles strictes :
 - La recette doit être faisable exactement dans le temps indiqué
-- Les quantités doivent être précises et réalistes
+- Les quantités doivent être précises et réalistes pour le nombre de personnes
 - Les étapes doivent être claires, courtes et dans le bon ordre
 - Le titre doit être créatif, appétissant et faire maximum 5 mots
 - Le titre s'écrit en français : majuscule uniquement au premier mot, tout le reste en minuscules
-- Pas de recettes génériques ou banales
-- Calibrage de la complexité : Facile = accessible à un débutant complet, techniques simples uniquement (pas de dorure, pas de déglaçage, pas de liaison) ; Moyen = quelques techniques intermédiaires (saisir, déglacer, réduire) ; Chef = techniques avancées réservées aux cuisiniers expérimentés (émulsions, cuissons précises, dressage). La recette doit vraiment correspondre au niveau demandé.
-- Allergènes : identifie parmi cette liste ceux présents dans la recette : Gluten, Lactose, Œufs, Fruits à coque, Arachides, Crustacés, Poisson, Soja, Sésame. Liste uniquement ceux vraiment présents, tableau vide si aucun.
+- Chaque recette doit être un plat complet avec une protéine ET un accompagnement varié (pas toujours riz ou pâtes — varier avec légumes rôtis, purée, quinoa, salade, pain, polenta, lentilles...)
+- Varier les inspirations culinaires : cuisine française, italienne, asiatique, mexicaine, méditerranéenne, indienne... selon ce qui est cohérent avec l'ingrédient
+- Ne pas systématiquement utiliser citron, miel, ail ou thym — chercher de la créativité et de la diversité dans les associations
+- Calibrage complexité : Facile = débutant complet, techniques simples uniquement, ingrédients courants en supermarché classique, 5 à 7 ingrédients max ; Moyen = techniques intermédiaires (saisir, déglacer, réduire), 8 à 10 ingrédients max ; Chef = techniques avancées (émulsions, cuissons précises, dressage), ingrédients spécialisés autorisés
+- Respecter strictement le régime et les allergies indiqués
+- Utiliser uniquement les ustensiles disponibles indiqués
+- Allergènes : identifier parmi cette liste ceux présents : Gluten, Lactose, Œufs, Fruits à coque, Arachides, Crustacés, Poisson, Soja, Sésame. Tableau vide si aucun.
 
 Réponds uniquement en JSON avec cette structure exacte, sans markdown ni texte autour :
 {
@@ -94,12 +98,18 @@ Réponds uniquement en JSON avec cette structure exacte, sans markdown ni texte 
   }
 
   const data = await res.json();
-  const text: string = data.content[0].text;
+  const text: string = data?.content?.[0]?.text;
+  if (!text) throw new Error('Réponse invalide de Claude');
 
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('Réponse invalide de Claude');
 
-  const raw = JSON.parse(match[0]) as RawRecipe;
+  let raw: RawRecipe;
+  try {
+    raw = JSON.parse(match[0]) as RawRecipe;
+  } catch {
+    throw new Error('Réponse invalide de Claude');
+  }
 
   return {
     name: raw.titre,

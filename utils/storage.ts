@@ -22,7 +22,11 @@ export const ALL_USTENSILS = [
 export async function getSavedRecipes(): Promise<SavedRecipe[]> {
   const raw = await AsyncStorage.getItem(RECIPES_KEY);
   if (!raw) return [];
-  return JSON.parse(raw) as SavedRecipe[];
+  try {
+    return JSON.parse(raw) as SavedRecipe[];
+  } catch {
+    return [];
+  }
 }
 
 export async function saveRecipe(recipe: GeneratedRecipe): Promise<SavedRecipe> {
@@ -41,7 +45,11 @@ export async function deleteRecipe(id: string): Promise<void> {
 export async function getUstensils(): Promise<string[]> {
   const raw = await AsyncStorage.getItem(USTENSILS_KEY);
   if (!raw) return ALL_USTENSILS;
-  return JSON.parse(raw) as string[];
+  try {
+    return JSON.parse(raw) as string[];
+  } catch {
+    return ALL_USTENSILS;
+  }
 }
 
 export async function saveUstensils(ustensils: string[]): Promise<void> {

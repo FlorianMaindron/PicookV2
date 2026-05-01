@@ -88,13 +88,22 @@ export default function RecipeScreen() {
         </TouchableOpacity>
 
         <View style={styles.recipeHeader}>
-          <Text style={styles.recipeEmoji}>{recipe.emoji}</Text>
           <Text style={styles.recipeName}>{recipe.name}</Text>
           <View style={styles.badges}>
             <View style={styles.badge}><Text style={styles.badgeText}>⏱ {recipe.time}</Text></View>
             <View style={styles.badge}><Text style={styles.badgeText}>👨‍🍳 {recipe.complexity}</Text></View>
             <View style={styles.badge}><Text style={styles.badgeText}>👥 {recipe.persons} pers.</Text></View>
           </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Ingrédients</Text>
+          {recipe.ingredients.map((ing, i) => (
+            <View key={ing.id} style={[styles.ingRow, i === recipe.ingredients.length - 1 && styles.ingRowLast]}>
+              <Text style={styles.ingDot}>·</Text>
+              <Text style={styles.ingText}>{ing.name}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.progressSection}>
@@ -128,9 +137,6 @@ export default function RecipeScreen() {
         <TouchableOpacity style={styles.buttonSecondary} onPress={handleShare} activeOpacity={0.85}>
           <Text style={styles.buttonSecondaryText}>Partager</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.homeLink} onPress={() => router.navigate('/')} activeOpacity={0.6}>
-          <Text style={styles.homeLinkText}>Retour à l'accueil</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -144,12 +150,15 @@ const styles = StyleSheet.create({
   back: { marginBottom: 28 },
   backText: { fontSize: 16, color: Colors.orange, fontWeight: '600' },
   recipeHeader: { marginBottom: 24 },
-  recipeEmoji: { fontSize: 52, marginBottom: 14 },
   recipeName: { fontSize: 28, fontWeight: '800', color: Colors.text, letterSpacing: -0.5, marginBottom: 16, lineHeight: 34 },
   badges: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   badge: { backgroundColor: Colors.white, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, borderWidth: 1, borderColor: Colors.border },
   badgeText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  progressSection: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+  ingRow: { flexDirection: 'row', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border, alignItems: 'flex-start' },
+  ingRowLast: { borderBottomWidth: 0, paddingBottom: 0 },
+  ingDot: { fontSize: 18, color: Colors.orange, lineHeight: 22, marginTop: 1 },
+  ingText: { flex: 1, fontSize: 15, color: Colors.text, lineHeight: 22 },
+  progressSection: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, marginBottom: 20 },
   progressBar: { flex: 1, height: 6, backgroundColor: Colors.border, borderRadius: 100, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: Colors.orange, borderRadius: 100 },
   progressLabel: { fontSize: 12, color: Colors.textSecondary, fontWeight: '600', minWidth: 70, textAlign: 'right' },
@@ -172,6 +181,4 @@ const styles = StyleSheet.create({
   buttonPrimaryText: { color: Colors.white, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
   buttonSecondary: { backgroundColor: Colors.white, borderRadius: 16, paddingVertical: 18, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border },
   buttonSecondaryText: { color: Colors.text, fontSize: 17, fontWeight: '600' },
-  homeLink: { paddingVertical: 6, alignItems: 'center' },
-  homeLinkText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '400' },
 });

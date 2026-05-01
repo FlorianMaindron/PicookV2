@@ -7,18 +7,43 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Modal,
   Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { generateRecipe, type GeneratedRecipe } from '@/utils/claude';
 import { setCurrentRecipe } from '@/utils/currentRecipe';
+import { consumeGeneration } from '@/utils/quota';
+import { getSavedRecipes } from '@/utils/storage';
 
 function Checkbox({ checked, onPress }: { checked: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity style={[styles.checkbox, checked && styles.checkboxChecked]} onPress={onPress} activeOpacity={0.7}>
       {checked ? <Text style={styles.checkmark}>✓</Text> : null}
     </TouchableOpacity>
+  );
+}
+
+function PaywallModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.paywallCard}>
+          <Text style={styles.paywallEmoji}>🍳</Text>
+          <Text style={styles.paywallTitle}>Limite atteinte</Text>
+          <Text style={styles.paywallMessage}>
+            Vous avez utilisé vos 3 recettes gratuites aujourd'hui. Revenez demain ou passez à Picook Premium pour des recettes illimitées.
+          </Text>
+          <TouchableOpacity style={styles.premiumBtn} activeOpacity={0.85}>
+            <Text style={styles.premiumBtnText}>Découvrir Premium</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tomorrowBtn} onPress={onClose} activeOpacity={0.8}>
+            <Text style={styles.tomorrowBtnText}>Revenir demain</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -42,16 +67,29 @@ export default function ProposalScreen() {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [shown, setShown] = useState<string[]>([]);
   const [noCheckedWarning, setNoCheckedWarning] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const fetchRecipe = useCallback(async (options: { exclude?: string[]; mandatory?: string[] } = {}) => {
     setLoading(true);
     setError(null);
     setChecked(new Set());
     setNoCheckedWarning(false);
+
+    const allowed = await consumeGeneration();
+    if (!allowed) {
+      setLoading(false);
+      setShowPaywall(true);
+      return;
+    }
+
+    const saved = await getSavedRecipes();
+    const savedNames = saved.map(r => r.name);
+    const excludeAll = [...(options.exclude ?? []), ...savedNames];
+
     try {
       const result = await generateRecipe({
         ingredient, diet, allergy, ustensil, complexity, time, persons,
-        exclude: options.exclude,
+        exclude: excludeAll,
         mandatoryIngredients: options.mandatory,
       });
       setRecipe(result);
@@ -106,6 +144,14 @@ export default function ProposalScreen() {
     );
   }
 
+  if (showPaywall) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <PaywallModal visible onClose={() => { setShowPaywall(false); router.back(); }} />
+      </SafeAreaView>
+    );
+  }
+
   if (error || !recipe) {
     return (
       <SafeAreaView style={styles.container}>
@@ -134,7 +180,6 @@ export default function ProposalScreen() {
         </TouchableOpacity>
 
         <View style={styles.recipeMeta}>
-          <Text style={styles.recipeEmoji}>{recipe.emoji}</Text>
           <Text style={styles.recipeName}>{recipe.name}</Text>
           <View style={styles.badges}>
             <View style={styles.badge}><Text style={styles.badgeText}>⏱ {recipe.time}</Text></View>
@@ -176,11 +221,8 @@ export default function ProposalScreen() {
         <TouchableOpacity style={styles.buttonGhost} onPress={handleNewRecipe} activeOpacity={0.7}>
           <Text style={styles.buttonGhostText}>Nouvelle recette 🔄</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.homeLink} onPress={() => router.navigate('/')} activeOpacity={0.6}>
-          <Text style={styles.homeLinkText}>Retour à l'accueil</Text>
-        </TouchableOpacity>
       </View>
+
     </SafeAreaView>
   );
 }
@@ -199,7 +241,6 @@ const styles = StyleSheet.create({
   back: { marginBottom: 28 },
   backText: { fontSize: 16, color: Colors.orange, fontWeight: '600' },
   recipeMeta: { marginBottom: 28 },
-  recipeEmoji: { fontSize: 52, marginBottom: 14 },
   recipeName: { fontSize: 28, fontWeight: '800', color: Colors.text, letterSpacing: -0.5, marginBottom: 16, lineHeight: 34 },
   badges: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   badge: { backgroundColor: Colors.white, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, borderWidth: 1, borderColor: Colors.border },
@@ -225,6 +266,17 @@ const styles = StyleSheet.create({
   warning: { textAlign: 'center', fontSize: 13, color: Colors.orange, fontWeight: '500', marginTop: 6 },
   buttonGhost: { paddingVertical: 12, alignItems: 'center' },
   buttonGhostText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '500' },
-  homeLink: { paddingVertical: 6, alignItems: 'center' },
-  homeLinkText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '400' },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 28 },
+  paywallCard: { backgroundColor: Colors.cream, borderRadius: 28, padding: 32, width: '100%', maxWidth: 360, alignItems: 'center' },
+  paywallEmoji: { fontSize: 52, marginBottom: 12 },
+  paywallTitle: { fontSize: 22, fontWeight: '800', color: Colors.text, marginBottom: 12, textAlign: 'center' },
+  paywallMessage: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 23, marginBottom: 28 },
+  premiumBtn: {
+    width: '100%', backgroundColor: Colors.orange, borderRadius: 16, paddingVertical: 18, alignItems: 'center',
+    shadowColor: Colors.orange, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+    marginBottom: 10,
+  },
+  premiumBtnText: { color: Colors.white, fontSize: 16, fontWeight: '700' },
+  tomorrowBtn: { width: '100%', backgroundColor: Colors.white, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border },
+  tomorrowBtnText: { color: Colors.text, fontSize: 16, fontWeight: '600' },
 });

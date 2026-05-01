@@ -95,9 +95,6 @@ export default function PreferencesScreen() {
         <TouchableOpacity style={styles.button} onPress={handleNext} activeOpacity={0.85}>
           <Text style={styles.buttonText}>Voir une recette →</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.homeLink} onPress={() => router.navigate('/')} activeOpacity={0.6}>
-          <Text style={styles.homeLinkText}>Retour à l'accueil</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -124,12 +121,10 @@ const styles = StyleSheet.create({
   cardLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, textAlign: 'center' },
   cardLabelSelected: { color: Colors.orange },
   spacer: { height: 16 },
-  footer: { paddingHorizontal: 24, paddingBottom: Platform.OS === 'ios' ? 32 : 24, paddingTop: 16, backgroundColor: Colors.cream, gap: 4 },
+  footer: { paddingHorizontal: 24, paddingBottom: Platform.OS === 'ios' ? 32 : 24, paddingTop: 16, backgroundColor: Colors.cream },
   button: {
     backgroundColor: Colors.orange, borderRadius: 16, paddingVertical: 18, alignItems: 'center',
     shadowColor: Colors.orange, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
   buttonText: { color: Colors.white, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
-  homeLink: { paddingVertical: 10, alignItems: 'center' },
-  homeLinkText: { fontSize: 14, color: Colors.textSecondary, fontWeight: '500' },
 });

@@ -1,50 +1,70 @@
-# Welcome to your Expo app 👋
+# Picook 🍳
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile de génération de recettes alimentée par l'IA Claude (Anthropic). Picook génère des recettes personnalisées en temps réel selon les ingrédients, régime, allergies, ustensiles et niveau de l'utilisateur.
 
-## Get started
+## Fonctionnalités
 
-1. Install dependencies
+- **Génération IA** — Recettes uniques générées par Claude Haiku en temps réel (aucune recette codée en dur)
+- **Filtres complets** — Régime (7 options), allergies multi-select (10 options), ustensiles personnalisables
+- **Flow complet** — Accueil → Préférences → Proposition → Recette avec étapes cochables
+- **Freemium** — 3 générations gratuites/jour, compteur remis à zéro chaque nuit
+- **Anti-doublon** — Jamais deux fois la même recette (session + recettes sauvegardées)
+- **Mes recettes** — Sauvegarde persistante avec AsyncStorage, scaling des quantités par nombre de personnes
+- **Allergènes** — Détection automatique sur chaque recette générée
+- **Navigation** — Tab bar (Accueil / Mes recettes)
 
-   ```bash
-   npm install
-   ```
+## Stack technique
 
-2. Start the app
+- React Native + Expo SDK 54
+- Expo Router v3 (file-based routing, tabs + stack imbriqués)
+- TypeScript strict
+- AsyncStorage pour la persistance locale
+- Claude Haiku (`claude-haiku-4-5-20251001`) via API Anthropic
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Lancer le projet
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuration
 
-## Learn more
+Créer un fichier `.env.local` à la racine :
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+EXPO_PUBLIC_ANTHROPIC_API_KEY=sk-ant-...
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+> ⚠️ Ce fichier ne doit jamais être commité. Il est ignoré par `.gitignore`.
 
-## Join the community
+## Structure du projet
 
-Join our community of developers creating universal apps.
+```
+app/
+  _layout.tsx              # Root Stack (tabs + recipe)
+  recipe.tsx               # Écran recette complète (root level, accessible depuis les 2 tabs)
+  (tabs)/
+    _layout.tsx            # Tab bar (Accueil / Mes recettes)
+    saved.tsx              # Mes recettes sauvegardées
+    (home)/
+      _layout.tsx          # Stack du flow de génération
+      index.tsx            # Accueil — ingredient + filtres
+      preferences.tsx      # Complexité, temps, personnes
+      proposal.tsx         # Recette proposée + ingrédients cochables
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+utils/
+  claude.ts               # Appel API Anthropic + prompt
+  currentRecipe.ts        # Store in-memory pour passer la recette entre écrans
+  storage.ts              # AsyncStorage — recettes sauvegardées + ustensiles
+  scale.ts                # Scaling des quantités selon le nombre de personnes
+  quota.ts                # Système freemium — quota journalier
+
+constants/
+  theme.ts                # Design tokens (couleurs)
+```
+
+## Notes de développement
+
+- Un bouton `⚙ reset quota [dev]` est présent en bas de l'accueil pour tester le freemium. **À supprimer avant publication App Store.**
+- La clé API est exposée côté client (contrainte Expo). Prévoir un backend proxy avant la mise en production.
